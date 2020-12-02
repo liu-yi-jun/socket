@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    
+</body>
+<script>
+    function fn(callBack) {
+        // return new Promise((resolve, reject)=> {
+            console.log(1)
+            setTimeout(()=> {
+                console.log(2)
+                callBack(3)
+                resolve(callBack)
+            },1000)
+            return callBack
+        // })
+    }
+
+    callBack = fn((res)=> {
+        console.log(res)
+
+    })
+    // let fu2 = fn
+    // console.log(fu2)
+    // let fu2 = fn().then(res=> {
+    //     console.log(res)
+    //     return(res)
+    // })
+    
+    // console.log(fu2)
+    // fu2.then(res=> {
+    //     console.log(res)
+    // })
+    // console.log(fn())
+    // console.log(fn())
+</script>
+</html>
