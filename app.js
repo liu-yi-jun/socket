@@ -5,6 +5,7 @@ const io = require('socket.io')(server)
 const port = process.env.PORT || 8000;
 
 let users = {}
+let leave = {}
 
 io.on('connection', socket => {
    
@@ -16,6 +17,13 @@ io.on('connection', socket => {
         socket.user = user;
         console.log("登录成功！", user)
         users[user.userId] = user
+        // 用户一上线，离线信息中有，则循环发送信息
+        if(leave[to.userId]) {
+            leave[to.userId].forEach(element => {
+                socket.broadcast.to(user.roomId).emit('message', element.from, element.to, element.message);
+            });
+            leave[to.userId] = null
+        }
     });
     //发送私信
     socket.on('message', (from, to, message) => {
@@ -27,11 +35,20 @@ io.on('connection', socket => {
             let user = users[to.userId]
             socket.broadcast.to(user.roomId).emit('message', from, to, message);
         } else {
+            if(!leave[to.userId]) {
+                leave[to.userId] = []
+            }
+            leave[to.userId].push({
+                from,
+                to,
+                message
+            })
+            console.log('leave',leave)
             console.log('离线了')
         }
     });
     socket.on('disconnect', () => {
-        users[socket.user.userId] = undefined
+        users[socket.user.userId] = null
         console.log('disconnect')
     }) // 客户端断开连接时调用(可能是关掉页面，网络不通了等)
 })
