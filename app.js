@@ -8,7 +8,7 @@ let users = {}
 let leave = {}
 
 io.on('connection', socket => {
-   
+
     // client 即是连接上来的一个客户端
     console.log(socket.id) // id 是区分客户端的唯一标识
     //创建用户链接
@@ -17,14 +17,19 @@ io.on('connection', socket => {
         socket.user = user;
         console.log("登录成功！", user)
         users[user.userId] = user
-        // 用户一上线，离线信息中有，则循环发送信息
-        if(leave[to.userId]) {
-            leave[to.userId].forEach(element => {
-                socket.broadcast.to(user.roomId).emit('message', element.from, element.to, element.message);
-            });
-            leave[to.userId] = null
-        }
+
     });
+    socket.on('getmessage', () => {
+        // 用户一上线，离线信息中有，则循环发送信息
+        console.log('leave[socket.user.userId]',leave[socket.user.userId])
+        if (leave[socket.user.userId]) {
+            leave[socket.user.userId].forEach(element => {
+                console.log(111111111111111111111111111,socket.user.roomId)
+                socket.broadcast.to(socket.user.roomId).emit('message', element.from, element.to, element.message);
+            });
+            leave[socket.user.userId] = null
+        }
+    })
     //发送私信
     socket.on('message', (from, to, message) => {
         console.log(users)
@@ -35,7 +40,7 @@ io.on('connection', socket => {
             let user = users[to.userId]
             socket.broadcast.to(user.roomId).emit('message', from, to, message);
         } else {
-            if(!leave[to.userId]) {
+            if (!leave[to.userId]) {
                 leave[to.userId] = []
             }
             leave[to.userId].push({
@@ -43,7 +48,7 @@ io.on('connection', socket => {
                 to,
                 message
             })
-            console.log('leave',leave)
+            console.log('leave', leave)
             console.log('离线了')
         }
     });
