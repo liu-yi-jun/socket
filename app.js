@@ -1,4 +1,6 @@
-const express = require('express')
+const { rejects } = require('assert');
+const express = require('express');
+const { resolve } = require('path');
 const app = express()
 const server = require('http').createServer(app)
 const io = require('socket.io')(server)
@@ -6,6 +8,15 @@ const port = process.env.PORT || 8000;
 
 let users = {}
 let leave = {}
+
+function time() {
+    return new Promise((resolve, reject) => {
+        setTimeout(() => {
+            resolve()
+        }, 200)
+    })
+
+}
 
 io.on('connection', socket => {
 
@@ -21,15 +32,21 @@ io.on('connection', socket => {
     });
     socket.on('getmessage', () => {
         // 用户一上线，离线信息中有，则循环发送信息
-        console.log('leave[socket.user.userId]',leave[socket.user.userId])
+        console.log('leave[socket.user.userId]', leave[socket.user.userId])
         if (leave[socket.user.userId]) {
-            leave[socket.user.userId].forEach(element => {
-                console.log(111111111111111111111111111,socket.user.roomId)
-                socket.broadcast.to(socket.user.roomId).emit('message', element.from, element.to, element.message);
+            let p = Promise.resolve()
+            leave[socket.user.userId].forEach(async element => {
+                // 防止客户端无法push异常
+                p = p.then(() => time()).then(() => {
+                    io.to(socket.user.roomId).emit('message', element.from, element.to, element.message);
+                    console.log("发送")
+                    return
+                }).catch(err => reject(err))
             });
-            leave[socket.user.userId] = null
+            // leave[socket.user.userId] = null
         }
     })
+
     //发送私信
     socket.on('message', (from, to, message) => {
         console.log(users)
