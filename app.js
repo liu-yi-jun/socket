@@ -25,7 +25,7 @@ io.on('connection', socket => {
     //创建用户链接
     socket.on('login', (user) => {
         user.roomId = socket.id;
-        socket.user = user;
+        socket.user = user; 
         console.log("登录成功！", user)
         users[user.userId] = user
 
@@ -43,7 +43,7 @@ io.on('connection', socket => {
                     return
                 }).catch(err => reject(err))
             });
-            // leave[socket.user.userId] = null
+            leave[socket.user.userId] = null
         }
     })
 
