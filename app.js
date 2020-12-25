@@ -6,6 +6,27 @@ const server = require('http').createServer(app)
 const io = require('socket.io')(server)
 const port = process.env.PORT || 8000;
 
+
+
+
+
+var ref = require("ref");
+var ffi = require("ffi");
+var ArrayType = require('ref-array')
+
+var double = ref.types.double
+var DoubleArray = ArrayType(double)
+
+var detail = new DoubleArray([0, 0, 0])
+var tone = ['C', '#C', 'D', '#D', 'E', 'F', '#F', 'G', '#G', 'A', '#A', 'B'];
+
+var MyLibrary = ffi.Library('C:/Users/Administrator/Desktop/new/Codefield/TestTone-NodeJS/Dll/return_fin_result1221.dll', {
+    "return_result": ['double', [DoubleArray, 'double']],
+    "return_detail": [DoubleArray, ['double', DoubleArray]]
+});
+
+
+
 let users = {}
 let leave = {}
 
@@ -25,7 +46,7 @@ io.on('connection', socket => {
     //创建用户链接
     socket.on('login', (user) => {
         user.roomId = socket.id;
-        socket.user = user; 
+        socket.user = user;
         console.log("登录成功！", user)
         users[user.userId] = user
 
@@ -69,6 +90,19 @@ io.on('connection', socket => {
             console.log('离线了')
         }
     });
+    // 发送解析音频
+    socket.on('analysis', (data) => {
+        var rtn = MyLibrary.return_result(data, 8000)
+        MyLibrary.return_detail(rtn, detail)
+        console.log(' Frequency: ', rtn, '\n', 'Pitch Names: ', tone[parseInt(detail[1]) - 1], '\n', 'Group: ', detail[0], '\n', 'Cent: ', detail[2])
+        let result = {
+            frequency: rtn,
+            pitch: tone[parseInt(detail[1]) - 1],
+            group: detail[0],
+            cent: detail[2]
+        }
+        io.to(socket.user.roomId).emit('completeAnalysis', result);
+    })
     socket.on('disconnect', () => {
         users[socket.user.userId] = null
         console.log('disconnect')
