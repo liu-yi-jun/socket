@@ -20,7 +20,7 @@ var DoubleArray = ArrayType(double)
 var detail = new DoubleArray([0, 0, 0])
 var tone = ['C', '#C', 'D', '#D', 'E', 'F', '#F', 'G', '#G', 'A', '#A', 'B'];
 
-var MyLibrary = ffi.Library('C:/Users/Administrator/Desktop/music/socket/Dll/return_fin_result1221.dll', {
+var MyLibrary = ffi.Library('./Dll/return_fin_result1221.dll', {
     "return_result": ['double', [DoubleArray, 'double']],
     "return_detail": [DoubleArray, ['double', DoubleArray]]
 });
