@@ -20,6 +20,10 @@ var DoubleArray = ArrayType(double)
 var detail = new DoubleArray([0, 0, 0])
 var tone = ['C', '#C', 'D', '#D', 'E', 'F', '#F', 'G', '#G', 'A', '#A', 'B'];
 
+// var MyLibrary = ffi.Library('C:/Users/Administrator/Desktop/music/socket/Dll/return_result_lib.so', {
+//     "return_result": ['double', [DoubleArray, 'int', 'double']],
+//     "return_detail": [DoubleArray, ['double', DoubleArray]]
+// });
 var MyLibrary = ffi.Library('C:/Users/Administrator/Desktop/music/socket/Dll/return_fin_result1221.dll', {
     "return_result": ['double', [DoubleArray, 'double']],
     "return_detail": [DoubleArray, ['double', DoubleArray]]
@@ -92,6 +96,7 @@ io.on('connection', socket => {
     });
     // 发送解析音频
     socket.on('analysis', (data) => {
+        // var rtn = MyLibrary.return_result(data, data.length, 8000)
         var rtn = MyLibrary.return_result(data, 8000)
         MyLibrary.return_detail(rtn, detail)
         console.log(' Frequency: ', rtn, '\n', 'Pitch Names: ', tone[parseInt(detail[1]) - 1], '\n', 'Group: ', detail[0], '\n', 'Cent: ', detail[2])
