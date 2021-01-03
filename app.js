@@ -7,9 +7,6 @@ const io = require('socket.io')(server)
 const port = process.env.PORT || 8000;
 
 
-
-
-
 var ref = require("ref");
 var ffi = require("ffi");
 var ArrayType = require('ref-array')
@@ -20,11 +17,15 @@ var DoubleArray = ArrayType(double)
 var detail = new DoubleArray([0, 0, 0])
 var tone = ['C', '#C', 'D', '#D', 'E', 'F', '#F', 'G', '#G', 'A', '#A', 'B'];
 
+<<<<<<< HEAD
 // var MyLibrary = ffi.Library('C:/Users/Administrator/Desktop/music/socket/Dll/return_result_lib.so', {
 //     "return_result": ['double', [DoubleArray, 'int', 'double']],
 //     "return_detail": [DoubleArray, ['double', DoubleArray]]
 // });
 var MyLibrary = ffi.Library('C:/Users/Administrator/Desktop/music/socket/Dll/return_fin_result1221.dll', {
+=======
+var MyLibrary = ffi.Library('./Dll/return_fin_result1221.dll', {
+>>>>>>> 8822d05e5fe96def0578a0f93dedf03bb8de04bd
     "return_result": ['double', [DoubleArray, 'double']],
     "return_detail": [DoubleArray, ['double', DoubleArray]]
 });
