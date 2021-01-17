@@ -34,7 +34,7 @@ var MyLibrary2 = ffi.Library(PUBLIC_PATH2, {
     "can_return_result_flag": ['int', [DoubleArray, 'int']],
     "return_result": ['double', [DoubleArray, 'int', 'double']],
     "can_return_detail_flag": ['int', ['double']],
-    "return_detail": ['int', ['double', DoubleArray]]
+    "return_detail": [DoubleArray, ['double', DoubleArray]]
 });
 
 
@@ -122,16 +122,21 @@ io.on('connection', socket => {
         // "return_result": ['double', [DoubleArray, 'int', 'double']],
         // "can_return_detail_flag": ['int', ['double']],
         // "return_detail":  ['int', ['double',DoubleArray]]
+        console.log('data',data)
         let result_flag = MyLibrary2.can_return_result_flag(data, data.length)
+        console.log('result_flag',result_flag)
         if(!result_flag) {
             return
         }
         var rtn = MyLibrary2.return_result(data, data.length, 8000)
+        console.log('rtn',rtn)
         let detail_flag = MyLibrary2.can_return_detail_flag(rtn)
+        console.log('detail_flag',detail_flag)
         if(!detail_flag) {
             return
         }
         MyLibrary2.return_detail(rtn, detail)
+        console.log('detail',detail)
         console.log(' Frequency: ', rtn, '\n', 'Pitch Names: ', tone[parseInt(detail[1]) - 1], '\n', 'Group: ', detail[0], '\n', 'Cent: ', detail[2])
         let result = {
             frequency: rtn,
