@@ -17,17 +17,24 @@ var DoubleArray = ArrayType(double)
 var detail = new DoubleArray([0, 0, 0])
 var tone = ['C', '#C', 'D', '#D', 'E', 'F', '#F', 'G', '#G', 'A', '#A', 'B'];
 
-<<<<<<< HEAD
-// var MyLibrary = ffi.Library('C:/Users/Administrator/Desktop/music/socket/Dll/return_result_lib.so', {
+// var MyLibrary = ffi.Library('./Dll/return_fin_result1221.dll', {
 //     "return_result": ['double', [DoubleArray, 'int', 'double']],
 //     "return_detail": [DoubleArray, ['double', DoubleArray]]
 // });
-var MyLibrary = ffi.Library('C:/Users/Administrator/Desktop/music/socket/Dll/return_fin_result1221.dll', {
-=======
-var MyLibrary = ffi.Library('./Dll/return_fin_result1221.dll', {
->>>>>>> 8822d05e5fe96def0578a0f93dedf03bb8de04bd
-    "return_result": ['double', [DoubleArray, 'double']],
+
+let PUBLIC_PATH = resolve(__dirname, './Dll/return_result_lib.so');
+var MyLibrary = ffi.Library(PUBLIC_PATH, {
+    "return_result": ['double', [DoubleArray, 'int', 'double']],
     "return_detail": [DoubleArray, ['double', DoubleArray]]
+});
+
+
+let PUBLIC_PATH2 = resolve(__dirname, './Dll/return_result_lib2.so');
+var MyLibrary2 = ffi.Library(PUBLIC_PATH2, {
+    "can_return_result_flag": ['int', [DoubleArray, 'int']],
+    "return_result": ['double', [DoubleArray, 'int', 'double']],
+    "can_return_detail_flag": ['int', ['double']],
+    "return_detail": ['int', ['double', DoubleArray]]
 });
 
 
@@ -108,6 +115,31 @@ io.on('connection', socket => {
             cent: detail[2]
         }
         io.to(socket.user.roomId).emit('completeAnalysis', result);
+    })
+    // 音频解析接口2
+    socket.on('analysis2', (data) => {
+        // "can_return_result_flag": ['int', [DoubleArray, 'int']],
+        // "return_result": ['double', [DoubleArray, 'int', 'double']],
+        // "can_return_detail_flag": ['int', ['double']],
+        // "return_detail":  ['int', ['double',DoubleArray]]
+        let result_flag = MyLibrary2.can_return_result_flag(data, data.length)
+        if(!result_flag) {
+            return
+        }
+        var rtn = MyLibrary2.return_result(data, data.length, 8000)
+        let detail_flag = MyLibrary2.can_return_detail_flag(rtn)
+        if(!detail_flag) {
+            return
+        }
+        MyLibrary2.return_detail(rtn, detail)
+        console.log(' Frequency: ', rtn, '\n', 'Pitch Names: ', tone[parseInt(detail[1]) - 1], '\n', 'Group: ', detail[0], '\n', 'Cent: ', detail[2])
+        let result = {
+            frequency: rtn,
+            pitch: tone[parseInt(detail[1]) - 1],
+            group: detail[0],
+            cent: detail[2]
+        }
+        io.to(socket.user.roomId).emit('completeAnalysis2', result);
     })
     socket.on('disconnect', () => {
         users[socket.user.userId] = null
