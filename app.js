@@ -86,7 +86,8 @@ io.on('connection', socket => {
     socket.on('applyJoin', (from, to, message) => {
         if (users[to.userId]) {
             let user = users[to.userId]
-            socket.broadcast.to(user.roomId).emit('systemMsg', from, to, message);
+            io.to(user.roomId).emit('systemMsg', from, to, message);
+            // socket.broadcast.to(user.roomId).emit('systemMsg', from, to, message);
         } else {
             if (!leaveDate[to.userId]) {
                 leaveDate[to.userId] = messagePass
