@@ -22,25 +22,31 @@ var tone = ['C', '#C', 'D', '#D', 'E', 'F', '#F', 'G', '#G', 'A', '#A', 'B'];
 //     "return_detail": [DoubleArray, ['double', DoubleArray]]
 // });
 
-let PUBLIC_PATH = resolve(__dirname, './Dll/return_result_lib.so');
-var MyLibrary = ffi.Library(PUBLIC_PATH, {
-    "return_result": ['double', [DoubleArray, 'int', 'double']],
-    "return_detail": [DoubleArray, ['double', DoubleArray]]
-});
+// let PUBLIC_PATH = resolve(__dirname, './Dll/return_result_lib.so');
+// var MyLibrary = ffi.Library(PUBLIC_PATH, {
+//     "return_result": ['double', [DoubleArray, 'int', 'double']],
+//     "return_detail": [DoubleArray, ['double', DoubleArray]]
+// });
 
 
-let PUBLIC_PATH2 = resolve(__dirname, './Dll/return_result_lib2.so');
-var MyLibrary2 = ffi.Library(PUBLIC_PATH2, {
-    "can_return_result_flag": ['int', [DoubleArray, 'int']],
-    "return_result": ['double', [DoubleArray, 'int', 'double']],
-    "can_return_detail_flag": ['int', ['double']],
-    "return_detail": [DoubleArray, ['double', DoubleArray]]
-});
+// let PUBLIC_PATH2 = resolve(__dirname, './Dll/return_result_lib2.so');
+// var MyLibrary2 = ffi.Library(PUBLIC_PATH2, {
+//     "can_return_result_flag": ['int', [DoubleArray, 'int']],
+//     "return_result": ['double', [DoubleArray, 'int', 'double']],
+//     "can_return_detail_flag": ['int', ['double']],
+//     "return_detail": [DoubleArray, ['double', DoubleArray]]
+// });
 
 
 
 let users = {}
 let leave = {}
+
+let messagePass = {
+    'systemMsg': []
+}
+
+let leaveDate = {}
 
 function time() {
     return new Promise((resolve, reject) => {
@@ -63,6 +69,38 @@ io.on('connection', socket => {
         users[user.userId] = user
 
     });
+    socket.on('getLeaveDate', () => {
+        if (leaveDate[socket.user.userId]) {
+            for (key in messagePass) {
+                let p = Promise.resolve()
+                leaveDate[socket.user.userId][key].forEach(async element => {
+                    p = p.then(() => time()).then(() => {
+                        io.to(socket.user.roomId).emit(key, element.from, element.to, element.message);
+                        return
+                    }).catch(err => reject(err))
+                });
+                leaveDate[socket.user.userId][key] = []
+            }
+        }
+    });
+    socket.on('applyJoin', (from, to, message) => {
+        if (users[to.userId]) {
+            let user = users[to.userId]
+            socket.broadcast.to(user.roomId).emit('systemMsg', from, to, message);
+        } else {
+            if (!leaveDate[to.userId]) {
+                leaveDate[to.userId] = messagePass
+            }
+            leaveDate[to.userId]['systemMsg'].push({
+                from,
+                to,
+                message
+            })
+            console.log('leaveDate', leaveDate)
+            console.log('离线了')
+        }
+    });
+
     socket.on('getmessage', () => {
         // 用户一上线，离线信息中有，则循环发送信息
         console.log('leave[socket.user.userId]', leave[socket.user.userId])
@@ -122,21 +160,21 @@ io.on('connection', socket => {
         // "return_result": ['double', [DoubleArray, 'int', 'double']],
         // "can_return_detail_flag": ['int', ['double']],
         // "return_detail":  ['int', ['double',DoubleArray]]
-        console.log('data',data)
+        console.log('data', data)
         let result_flag = MyLibrary2.can_return_result_flag(data, data.length)
-        console.log('result_flag',result_flag)
-        if(!result_flag) {
+        console.log('result_flag', result_flag)
+        if (!result_flag) {
             return
         }
         var rtn = MyLibrary2.return_result(data, data.length, 8000)
-        console.log('rtn',rtn)
+        console.log('rtn', rtn)
         let detail_flag = MyLibrary2.can_return_detail_flag(rtn)
-        console.log('detail_flag',detail_flag)
-        if(!detail_flag) {
+        console.log('detail_flag', detail_flag)
+        if (!detail_flag) {
             return
         }
         MyLibrary2.return_detail(rtn, detail)
-        console.log('detail',detail)
+        console.log('detail', detail)
         console.log(' Frequency: ', rtn, '\n', 'Pitch Names: ', tone[parseInt(detail[1]) - 1], '\n', 'Group: ', detail[0], '\n', 'Cent: ', detail[2])
         let result = {
             frequency: rtn,
